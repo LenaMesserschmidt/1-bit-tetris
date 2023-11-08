@@ -1,0 +1,42 @@
+[gd_scene load_steps=5 format=3 uid="uid://cjw7ahb6ltqvb"]
+
+[ext_resource type="Texture2D" uid="uid://cjh31w2jlsewo" path="res://assets/tetrominoes.png" id="1_4sicn"]
+[ext_resource type="Script" path="res://grid.gd" id="2_n7ck0"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_jlu6h"]
+texture = ExtResource("1_4sicn")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+6:0/0 = 0
+7:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_jaha1"]
+tile_size = Vector2i(32, 32)
+sources/1 = SubResource("TileSetAtlasSource_jlu6h")
+
+[node name="Grid" type="TileMap"]
+tile_set = SubResource("TileSet_jaha1")
+cell_quadrant_size = 32
+format = 2
+layer_0/name = "board"
+layer_0/tile_data = PackedInt32Array(0, 458753, 0, 65536, 458753, 0, 131072, 458753, 0, 196608, 458753, 0, 262144, 458753, 0, 327680, 458753, 0, 393216, 458753, 0, 458752, 458753, 0, 524288, 458753, 0, 589824, 458753, 0, 655360, 458753, 0, 720896, 458753, 0, 786432, 458753, 0, 851968, 458753, 0, 917504, 458753, 0, 983040, 458753, 0, 1048576, 458753, 0, 1114112, 458753, 0, 1179648, 458753, 0, 1245184, 458753, 0, 1310720, 458753, 0, 1376256, 458753, 0, 1, 458753, 0, 1376257, 458753, 0, 2, 458753, 0, 1376258, 458753, 0, 3, 458753, 0, 1376259, 458753, 0, 4, 458753, 0, 1376260, 458753, 0, 5, 458753, 0, 1376261, 458753, 0, 6, 458753, 0, 1376262, 458753, 0, 7, 458753, 0, 1376263, 458753, 0, 8, 458753, 0, 1376264, 458753, 0, 9, 458753, 0, 1376265, 458753, 0, 10, 458753, 0, 1376266, 458753, 0, 11, 458753, 0, 65547, 458753, 0, 131083, 458753, 0, 196619, 458753, 0, 262155, 458753, 0, 327691, 458753, 0, 393227, 458753, 0, 458763, 458753, 0, 524299, 458753, 0, 589835, 458753, 0, 655371, 458753, 0, 720907, 458753, 0, 786443, 458753, 0, 851979, 458753, 0, 917515, 458753, 0, 983051, 458753, 0, 1048587, 458753, 0, 1114123, 458753, 0, 1179659, 458753, 0, 1245195, 458753, 0, 1310731, 458753, 0, 1376267, 458753, 0)
+layer_1/name = "active"
+layer_1/enabled = true
+layer_1/modulate = Color(1, 1, 1, 1)
+layer_1/y_sort_enabled = false
+layer_1/y_sort_origin = 0
+layer_1/z_index = 1
+layer_1/tile_data = PackedInt32Array()
+layer_2/name = "bg"
+layer_2/enabled = true
+layer_2/modulate = Color(1, 1, 1, 1)
+layer_2/y_sort_enabled = false
+layer_2/y_sort_origin = 0
+layer_2/z_index = -1
+layer_2/tile_data = PackedInt32Array()
+script = ExtResource("2_n7ck0")
