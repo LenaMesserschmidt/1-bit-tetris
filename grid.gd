@@ -50,6 +50,15 @@ var shapes_full := shapes.duplicate()
 const COLS : int = 10
 const ROWS : int = 20
 
+#movement variables
+const directions := [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.DOWN]
+var steps : Array
+const steps_req : int = 100
+const start_pos := Vector2i(5,1)
+var cur_pos : Vector2i
+var speed : float
+var time : float = 0.0
+
 #game piece variables
 var piece_type
 var next_piece_type
@@ -57,7 +66,7 @@ var rotation_index : int = 0
 var active_piece : Array
 
 #tilemap variables
-var tile_id : int = 1
+var tile_id : int = 0
 var piece_atlas : Vector2i
 var next_piece_atlas : Vector2i
 
@@ -69,10 +78,33 @@ func _ready():
 	new_game()
 
 func new_game():
+	#reset variables
+	speed = 1.0
+	steps = [0, 0, 0] # 0:left, 1:right, 2:down
 	piece_type = pick_piece()
+	create_piece()
 
-func _process(_delta):
-	draw_piece(piece_type[0], Vector2i(5,1), Vector2i(1,0))
+func _process(delta):
+	time += delta
+	if Input.is_action_pressed('ui_left'):
+		steps[0] += 20
+	elif Input.is_action_pressed('ui_right'):
+		steps[1] += 20
+	elif Input.is_action_pressed('ui_down'):
+		steps[2] += 20
+	elif Input.is_action_pressed('ui_up'):
+		if time > 0.1:
+			rotate_piece()
+			time = 0
+		
+	#apply downward movement every frame
+	steps[2] += speed
+	
+	#move the piece
+	for i in range(steps.size()):
+		if steps[i] > steps_req:
+			move_piece(directions[i])
+			steps[i] = 0
 
 func pick_piece():
 	var piece
@@ -85,7 +117,48 @@ func pick_piece():
 		piece = shapes.pop_front()
 	return piece
 
-func draw_piece(piece, pos, atlas):
+func create_piece():
+	#reset variables
+	steps = [0, 0, 0] # 0:left, 1:right, 2:down
+	cur_pos = start_pos
+	active_piece = piece_type[rotation_index]
+	draw_piece(active_piece, cur_pos)
+
+func clear_piece():
+	for i in active_piece:
+		erase_cell(active_layer, cur_pos + i)
+
+func draw_piece(piece, pos, atlas = Vector2i(0,1)):
 	for p in piece:
 		set_cell(active_layer, pos + p, tile_id, atlas)
 
+func rotate_piece():
+	if can_rotate():
+		clear_piece()
+		rotation_index = (rotation_index + 1) % 4
+		active_piece = piece_type[rotation_index]
+		draw_piece(active_piece, cur_pos)
+
+func move_piece(dir):
+	if can_move(dir):
+		clear_piece()
+		cur_pos += dir
+		draw_piece(active_piece, cur_pos)
+
+func can_move(dir):
+	var cm = true
+	for i in active_piece:
+		if not is_free(i + cur_pos + dir):
+			cm = false
+	return cm
+
+func can_rotate():
+	var cr = true
+	var temp_rotation_index = (rotation_index + 1) % 4
+	for i in piece_type[temp_rotation_index]:
+		if not is_free(i + cur_pos):
+			cr = false
+	return cr
+
+func is_free(pos):
+	return get_cell_source_id(board_layer, pos) == -1
