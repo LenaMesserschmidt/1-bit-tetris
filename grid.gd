@@ -46,6 +46,9 @@ var j := [j_0, j_90, j_180, j_270]
 var shapes := [i, t, o, z, s, l, j]
 var shapes_full := shapes.duplicate()
 
+var color1 = '#7774B5'
+var color2 = '#262356'
+
 #grid variables
 const COLS : int = 10
 const ROWS : int = 20
@@ -57,6 +60,7 @@ const steps_req : int = 100
 const start_pos := Vector2i(5,1)
 var cur_pos : Vector2i
 var speed : float
+const ACCEL : float = 0.5
 var time : float = 0.0
 
 #game piece variables
@@ -65,9 +69,14 @@ var next_piece_type
 var rotation_index : int = 0
 var active_piece : Array
 
+#game variables
+var score : int
+const REWARD : int = 100
+var game_running : bool
+
 #tilemap variables
 var tile_id : int = 0
-var piece_atlas : Vector2i
+var piece_atlas : Vector2i = Vector2i(0,1)
 var next_piece_atlas : Vector2i
 
 #layer variables
@@ -76,35 +85,49 @@ var active_layer : int = 1
 
 func _ready():
 	new_game()
+	$HUD.get_node("MarginContainer/VBoxContainer/RestartButton").pressed.connect(new_game)
+	$HUD.get_node("MarginContainer/VBoxContainer/ChangeColorButton").pressed.connect(change_colors)
 
 func new_game():
+	$HUD.get_node("MarginContainer/VBoxContainer/GameOverLabel").hide()
 	#reset variables
+	score = 0
 	speed = 1.0
 	steps = [0, 0, 0] # 0:left, 1:right, 2:down
+	
+	#clear everything
+	clear_piece()
+	clear_board()
+	clear_panel()
+	
 	piece_type = pick_piece()
+	next_piece_type = pick_piece()
 	create_piece()
+	
+	game_running = true
 
 func _process(delta):
-	time += delta
-	if Input.is_action_pressed('ui_left'):
-		steps[0] += 20
-	elif Input.is_action_pressed('ui_right'):
-		steps[1] += 20
-	elif Input.is_action_pressed('ui_down'):
-		steps[2] += 20
-	elif Input.is_action_pressed('ui_up'):
-		if time > 0.1:
-			rotate_piece()
-			time = 0
+	if game_running:
+		time += delta
+		if Input.is_action_pressed('ui_left'):
+			steps[0] += 20
+		elif Input.is_action_pressed('ui_right'):
+			steps[1] += 20
+		elif Input.is_action_pressed('ui_down'):
+			steps[2] += 20
+		elif Input.is_action_pressed('ui_up'):
+			if time > 0.15:
+				rotate_piece()
+				time = 0
 		
-	#apply downward movement every frame
-	steps[2] += speed
-	
-	#move the piece
-	for i in range(steps.size()):
-		if steps[i] > steps_req:
-			move_piece(directions[i])
-			steps[i] = 0
+		#apply downward movement every frame
+		steps[2] += speed
+		
+		#move the piece
+		for i in range(steps.size()):
+			if steps[i] > steps_req:
+				move_piece(directions[i])
+				steps[i] = 0
 
 func pick_piece():
 	var piece
@@ -123,6 +146,9 @@ func create_piece():
 	cur_pos = start_pos
 	active_piece = piece_type[rotation_index]
 	draw_piece(active_piece, cur_pos)
+	
+	# show next piece
+	draw_piece(next_piece_type[0], Vector2i(14,10))
 
 func clear_piece():
 	for i in active_piece:
@@ -144,6 +170,33 @@ func move_piece(dir):
 		clear_piece()
 		cur_pos += dir
 		draw_piece(active_piece, cur_pos)
+	else:
+		if dir == Vector2i.DOWN:
+			land_piece()
+			check_rows()
+			piece_type = next_piece_type
+			next_piece_type = pick_piece()
+			clear_panel()
+			create_piece()
+			check_game_over()
+
+func land_piece():
+	#remove each segment from the active layer and onto the board layer
+	for i in active_piece:
+		erase_cell(active_layer, cur_pos + i)
+		set_cell(board_layer, cur_pos + i, tile_id, piece_atlas)
+
+func check_game_over():
+	for i in active_piece:
+		if not is_free(i + cur_pos):
+			land_piece()
+			$HUD.get_node("MarginContainer/VBoxContainer/GameOverLabel").show()
+			game_running = false
+
+func clear_panel():
+	for i in range(13,18):
+		for j in range(9,13):
+			erase_cell(active_layer, Vector2i(i,j))
 
 func can_move(dir):
 	var cm = true
@@ -162,3 +215,39 @@ func can_rotate():
 
 func is_free(pos):
 	return get_cell_source_id(board_layer, pos) == -1
+
+func check_rows():
+	var row : int = ROWS
+	while row > 0:
+		var count = 0
+		for i in range(COLS):
+			if not is_free(Vector2i(i + 1, row)):
+				count += 1
+		# if row is full then erase it
+		if count == COLS:
+			shift_rows(row)
+			score += REWARD
+			$HUD.get_node("MarginContainer/VBoxContainer/ScoreLabel").text = "SCORE: " + str(score)
+			speed += ACCEL
+		else:
+			row -= 1
+
+func shift_rows(row):
+	var atlas
+	for i in range(row, 1, -1):
+		for j in COLS:
+			atlas = get_cell_atlas_coords(board_layer, Vector2i(j+1, i-1))
+			if atlas == Vector2i(-1, -1):
+				erase_cell(board_layer, Vector2i(j+1, i))
+			else:
+				set_cell(board_layer, Vector2i(j+1, i), tile_id, atlas)
+
+func clear_board():
+	for i in range(ROWS):
+		for j in range(COLS):
+			erase_cell(board_layer, Vector2i(j+1, i+1))
+
+func change_colors():
+	set_self_modulate('red')
+	$HUD.get_node("ColorRect").set_self_modulate('red')
+		

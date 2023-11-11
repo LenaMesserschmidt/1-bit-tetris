@@ -12,7 +12,7 @@ func _process(delta):
 
 
 func _on_mouse_entered():
-	set_self_modulate("#7e007f")
+	set_self_modulate(Color(1,1,1,0))
 
 
 func _on_mouse_exited():
