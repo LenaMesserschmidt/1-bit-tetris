@@ -99,6 +99,7 @@ func new_game():
 	clear_piece()
 	clear_board()
 	clear_panel()
+	$HUD.get_node("MarginContainer/VBoxContainer/ScoreLabel").text = "SCORE: " + str(score)
 	
 	piece_type = pick_piece()
 	next_piece_type = pick_piece()
