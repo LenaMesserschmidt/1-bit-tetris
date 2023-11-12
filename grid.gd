@@ -160,6 +160,7 @@ func draw_piece(piece, pos, atlas = Vector2i(0,1)):
 
 func rotate_piece():
 	if can_rotate():
+		$RotateSound.play()
 		clear_piece()
 		rotation_index = (rotation_index + 1) % 4
 		active_piece = piece_type[rotation_index]
@@ -181,6 +182,7 @@ func move_piece(dir):
 			check_game_over()
 
 func land_piece():
+	$DropSound.play()
 	#remove each segment from the active layer and onto the board layer
 	for i in active_piece:
 		erase_cell(active_layer, cur_pos + i)
@@ -191,6 +193,7 @@ func check_game_over():
 		if not is_free(i + cur_pos):
 			land_piece()
 			$HUD.get_node("MarginContainer/VBoxContainer/GameOverLabel").show()
+			$GameOverSound.play()
 			game_running = false
 
 func clear_panel():
@@ -233,6 +236,7 @@ func check_rows():
 			row -= 1
 
 func shift_rows(row):
+	$ShiftRowSound.play()
 	var atlas
 	for i in range(row, 1, -1):
 		for j in COLS:
